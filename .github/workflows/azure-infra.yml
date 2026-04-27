@@ -50,4 +50,3 @@ jobs:
           gh variable set SWA_PRODUCTION_URL \
             --body "https://$hostname" \
             --repo "$GITHUB_REPOSITORY"
-
