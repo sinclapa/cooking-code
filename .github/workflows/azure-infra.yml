@@ -9,7 +9,6 @@ on:
 permissions:
   id-token: write
   contents: read
-  secrets: write
 
 jobs:
   provision:
@@ -43,11 +42,3 @@ jobs:
           echo "::add-mask::$token"
           echo "token=$token" >> "$GITHUB_OUTPUT"
 
-      - name: Store deployment token as GitHub secret
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SWA_TOKEN: ${{ steps.bicep.outputs.token }}
-        run: |
-          gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN \
-            --body "$SWA_TOKEN" \
-            --repo "$GITHUB_REPOSITORY"

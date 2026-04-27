@@ -43,7 +43,7 @@ jobs:
       # And update sonar-project.properties with your project key / host URL.
       # -----------------------------------------------------------------------
       - name: SonarQube Scan
-        if: ${{ env.SONAR_TOKEN != '' }}
+        if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' }}
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
