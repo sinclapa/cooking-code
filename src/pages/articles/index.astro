@@ -1,0 +1,160 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const articles = (await getCollection('articles')).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+---
+
+<BaseLayout title="Articles" description="In-depth technical articles and tutorials from Cooking Code.">
+  <div class="page-header">
+    <div class="container">
+      <p class="page-eyebrow">📖 Deep dives</p>
+      <h1 class="page-title">Articles</h1>
+      <p class="page-subtitle">
+        Comprehensive guides and tutorials on modern development topics.
+      </p>
+    </div>
+  </div>
+
+  <div class="container articles-list">
+    {articles.map((article) => (
+      <a href={`/articles/${article.slug}`} class="article-row">
+        <div class="article-row-meta">
+          <time datetime={article.data.pubDate.toISOString()}>
+            {article.data.pubDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </time>
+          <span class={`badge badge--${article.data.difficulty}`}>{article.data.difficulty}</span>
+          {article.data.tags.slice(0, 2).map((tag) => (
+            <span class="pill">{tag}</span>
+          ))}
+        </div>
+        <div class="article-row-body">
+          <h2 class="article-row-title">{article.data.title}</h2>
+          <p class="article-row-desc">{article.data.description}</p>
+        </div>
+        <span class="article-row-arrow" aria-hidden="true">→</span>
+      </a>
+    ))}
+  </div>
+</BaseLayout>
+
+<style>
+  .page-header {
+    background: linear-gradient(180deg, var(--color-surface) 0%, transparent 100%);
+    border-bottom: 1px solid var(--color-border);
+    padding: 4rem 0 3rem;
+    margin-bottom: 3rem;
+  }
+
+  .page-eyebrow {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-accent-article);
+    margin: 0 0 0.75rem;
+  }
+
+  .page-title {
+    margin-bottom: 0.75rem;
+  }
+
+  .page-subtitle {
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    max-width: 560px;
+    margin: 0;
+  }
+
+  .articles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-bottom: 4rem;
+  }
+
+  .article-row {
+    display: grid;
+    grid-template-columns: 200px 1fr auto;
+    align-items: start;
+    gap: 1.5rem;
+    padding: 1.75rem 0;
+    border-bottom: 1px solid var(--color-border);
+    text-decoration: none;
+    color: var(--color-text);
+    transition: all 0.2s;
+  }
+
+  .article-row:hover {
+    padding-left: 0.5rem;
+  }
+
+  .article-row:hover .article-row-title {
+    color: var(--color-accent-article);
+  }
+
+  .article-row:hover .article-row-arrow {
+    transform: translateX(4px);
+    color: var(--color-accent-article);
+  }
+
+  .article-row-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.2rem;
+  }
+
+  .article-row-meta time {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  .article-row-body {
+    flex: 1;
+  }
+
+  .article-row-title {
+    font-size: 1.2rem;
+    margin: 0 0 0.5rem;
+    line-height: 1.4;
+    transition: color 0.2s;
+  }
+
+  .article-row-desc {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .article-row-arrow {
+    font-size: 1.25rem;
+    color: var(--color-border);
+    transition: all 0.2s;
+    padding-top: 0.2rem;
+  }
+
+  .pill {
+    font-size: 0.72rem;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 0.15em 0.65em;
+    color: var(--color-text-muted);
+  }
+
+  @media (max-width: 640px) {
+    .article-row {
+      grid-template-columns: 1fr auto;
+    }
+
+    .article-row-meta {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  }
+</style>

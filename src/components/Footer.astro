@@ -1,0 +1,42 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <p class="footer-brand">🍳 <strong>Cooking Code</strong> — code that's well done.</p>
+    <p class="footer-copy">&copy; {year} Cooking Code. Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>.</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--color-border);
+    margin-top: 4rem;
+    padding: 2.5rem 0;
+  }
+
+  .footer-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+  }
+
+  .footer-brand {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--color-text);
+  }
+
+  .footer-copy {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  .footer-copy a {
+    color: var(--color-accent);
+  }
+</style>

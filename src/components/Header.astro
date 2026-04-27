@@ -1,0 +1,84 @@
+---
+const { pathname } = Astro.url;
+const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="/" class="logo">
+      <span class="logo-icon">🍳</span>
+      <span class="logo-text">Cooking<strong>Code</strong></span>
+    </a>
+
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="/" class:list={['nav-link', { active: pathname === '/' }]}>Home</a>
+      <a href="/blog" class:list={['nav-link', { active: isActive('/blog') }]}>Blog</a>
+      <a href="/articles" class:list={['nav-link', { active: isActive('/articles') }]}>Articles</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(15, 15, 18, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .logo:hover {
+    color: var(--color-text);
+    opacity: 0.85;
+  }
+
+  .logo-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .logo-text strong {
+    color: var(--color-accent);
+  }
+
+  .site-nav {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .nav-link {
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    transition: color 0.2s, background 0.2s;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    color: var(--color-text);
+    background: var(--color-surface-raised);
+  }
+
+  .nav-link.active {
+    color: var(--color-accent);
+  }
+</style>
