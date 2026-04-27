@@ -12,9 +12,6 @@ jobs:
     name: Deploy Preview
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && github.event.action != 'closed'
-    environment:
-      name: staging-pr-${{ github.event.pull_request.number }}
-      url: ${{ steps.deploy.outputs.static-web-app-url }}
     permissions:
       id-token: write
       contents: read
