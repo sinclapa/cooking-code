@@ -6,7 +6,7 @@ const isActive = (path: string) => pathname === path || pathname.startsWith(path
 <header class="site-header">
   <div class="container header-inner">
     <a href="/" class="logo">
-      <span class="logo-icon">🍳</span>
+      <img src="/branding/cc-logo-white-simple.svg" alt="Cooking Code" class="logo-icon" />
       <span class="logo-text">Cooking<strong>Code</strong></span>
     </a>
 
@@ -50,8 +50,10 @@ const isActive = (path: string) => pathname === path || pathname.startsWith(path
   }
 
   .logo-icon {
-    font-size: 1.5rem;
-    line-height: 1;
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    display: block;
   }
 
   .logo-text strong {

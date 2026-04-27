@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { calculateReadingTime, formatReadingTime } from '../../utils/readingTime';
 
 const articles = (await getCollection('articles')).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
@@ -25,6 +26,7 @@ const articles = (await getCollection('articles')).sort(
           <time datetime={article.data.pubDate.toISOString()}>
             {article.data.pubDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </time>
+          <span class="read-time">{formatReadingTime(calculateReadingTime(article.body))}</span>
           <span class={`badge badge--${article.data.difficulty}`}>{article.data.difficulty}</span>
           {article.data.tags.slice(0, 2).map((tag) => (
             <span class="pill">{tag}</span>
@@ -108,6 +110,11 @@ const articles = (await getCollection('articles')).sort(
   }
 
   .article-row-meta time {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  .read-time {
     font-size: 0.85rem;
     color: var(--color-text-muted);
   }

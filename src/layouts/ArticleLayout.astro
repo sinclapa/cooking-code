@@ -1,12 +1,14 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import BaseLayout from './BaseLayout.astro';
+import { formatReadingTime } from '../utils/readingTime';
 
 interface Props {
   article: CollectionEntry<'articles'>;
+  readingTimeMinutes: number;
 }
 
-const { article } = Astro.props;
+const { article, readingTimeMinutes } = Astro.props;
 const { title, description, pubDate, updatedDate, heroImage, tags, author, difficulty } = article.data;
 
 const formattedDate = pubDate.toLocaleDateString('en-US', {
@@ -42,6 +44,8 @@ const formattedUpdated = updatedDate?.toLocaleDateString('en-US', {
           <span class="article-author">{author}</span>
           <span class="divider">·</span>
           <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+          <span class="divider">·</span>
+          <span>{formatReadingTime(readingTimeMinutes)}</span>
           {formattedUpdated && (
             <>
               <span class="divider">·</span>
