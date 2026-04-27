@@ -1,0 +1,12 @@
+{
+  "navigationFallback": {
+    "rewrite": "/404",
+    "exclude": ["/_astro/*", "/favicon.*", "*.css", "*.js", "*.png", "*.svg"]
+  },
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/404",
+      "statusCode": 404
+    }
+  }
+}
