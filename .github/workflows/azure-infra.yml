@@ -32,13 +32,22 @@ jobs:
             --output none
 
       - name: Deploy Bicep
-        id: bicep
         run: |
-          token=$(az deployment group create \
+          az deployment group create \
             --resource-group cooking-code \
             --template-file infra/main.bicep \
-            --query 'properties.outputs.deploymentToken.value' \
+            --output none
+
+      - name: Update SWA_PRODUCTION_URL variable
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          hostname=$(az staticwebapp show \
+            --name stapp-cooking-code \
+            --resource-group cooking-code \
+            --query 'defaultHostname' \
             --output tsv)
-          echo "::add-mask::$token"
-          echo "token=$token" >> "$GITHUB_OUTPUT"
+          gh variable set SWA_PRODUCTION_URL \
+            --body "https://$hostname" \
+            --repo "$GITHUB_REPOSITORY"
 

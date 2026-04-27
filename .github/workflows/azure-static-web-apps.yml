@@ -67,7 +67,7 @@ jobs:
     if: github.event_name == 'push'
     environment:
       name: production
-      url: https://stapp-cooking-code.azurestaticapps.net
+      url: ${{ vars.SWA_PRODUCTION_URL }}
     permissions:
       id-token: write
       contents: read
