@@ -4,7 +4,7 @@ const year = new Date().getFullYear();
 
 <footer class="site-footer">
   <div class="container footer-inner">
-    <p class="footer-brand">🍳 <strong>Cooking Code</strong> — code that's well done.</p>
+    <p class="footer-brand">🍳 Cooking<strong class="footer-brand-accent">Code</strong> — code that's well done.</p>
     <p class="footer-copy">&copy; {year} Cooking Code. Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>.</p>
   </div>
 </footer>
@@ -28,6 +28,11 @@ const year = new Date().getFullYear();
     margin: 0;
     font-size: 1rem;
     color: var(--color-text);
+    font-weight: 600;
+  }
+
+  .footer-brand-accent {
+    color: var(--color-accent);
   }
 
   .footer-copy {
