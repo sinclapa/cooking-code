@@ -11,7 +11,7 @@ jobs:
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
-    if: github.event.action != 'closed'
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
     permissions:
       contents: read
 
@@ -42,6 +42,7 @@ jobs:
         with:
           name: dist
           path: dist/
+          retention-days: 1
 
       # -----------------------------------------------------------------------
       # SonarQube analysis
