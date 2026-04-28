@@ -11,7 +11,10 @@ const posts = (await getCollection('blog')).sort(
 <BaseLayout title="Blog" description="Developer thoughts, tutorials, and opinions from the Cooking Code team.">
   <div class="page-header">
     <div class="container">
-      <p class="page-eyebrow">📝 Writing</p>
+      <p class="page-eyebrow">
+        <svg class="eyebrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        Writing
+      </p>
       <h1 class="page-title">Blog</h1>
       <p class="page-subtitle">
         Thoughts, tutorials, and the occasional deep-dive from the Cooking Code team.
@@ -56,6 +59,13 @@ const posts = (await getCollection('blog')).sort(
     letter-spacing: 0.1em;
     color: var(--color-accent-blog);
     margin: 0 0 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .eyebrow-icon {
+    flex-shrink: 0;
   }
 
   .page-title {
