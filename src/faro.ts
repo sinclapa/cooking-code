@@ -8,6 +8,7 @@ const environment =
   'production';
 
 initializeFaro({
+  paused: true,
   url: 'https://faro-collector-prod-gb-south-1.grafana.net/collect/79209a4e27e1814360531191874e54dc',
   app: {
     name: 'cooking-code',
