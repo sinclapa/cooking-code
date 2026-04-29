@@ -1,6 +1,12 @@
 import { defineConfig } from 'astro/config';
 import faroUploader from '@grafana/faro-rollup-plugin';
 
+if (!process.env.PUBLIC_BUILD_VERSION) {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  process.env.PUBLIC_BUILD_VERSION = `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}.${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}`;
+}
+
 export default defineConfig({
   site: 'https://cooking-code.dev',
   vite: {

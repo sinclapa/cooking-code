@@ -15,8 +15,25 @@ const isActive = (path: string) => pathname === path || pathname.startsWith(path
       <a href="/blog" class:list={['nav-link', { active: isActive('/blog') }]}>Blog</a>
       <a href="/articles" class:list={['nav-link', { active: isActive('/articles') }]}>Articles</a>
     </nav>
+
+    <span class="env-badge" id="header-env-badge" style="display: none;"></span>
   </div>
 </header>
+
+<script>
+  const hostname = window.location.hostname;
+  const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+  const isPreview = hostname.endsWith('.azurestaticapps.net');
+
+  if (isLocal || isPreview) {
+    const badge = document.getElementById('header-env-badge');
+    if (badge) {
+      badge.textContent = isLocal ? 'local' : 'preview';
+      badge.classList.add(isLocal ? 'env-badge--local' : 'env-badge--preview');
+      badge.style.display = 'inline';
+    }
+  }
+</script>
 
 <style>
   .site-header {
@@ -82,5 +99,26 @@ const isActive = (path: string) => pathname === path || pathname.startsWith(path
 
   .nav-link.active {
     color: var(--color-accent);
+  }
+
+  .env-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    border: 1px solid;
+  }
+
+  .env-badge--local {
+    color: #22d3ee;
+    border-color: rgba(34, 211, 238, 0.3);
+    background: rgba(34, 211, 238, 0.08);
+  }
+
+  .env-badge--preview {
+    color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.3);
+    background: rgba(74, 222, 128, 0.08);
   }
 </style>
