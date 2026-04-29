@@ -24,3 +24,6 @@ pnpm-debug.log*
 # JetBrains
 .idea/
 coverage/
+
+# Claude Code
+.claude/
