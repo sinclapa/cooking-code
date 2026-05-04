@@ -1,0 +1,124 @@
+---
+---
+
+<div id="consent-banner" class="consent-banner" role="dialog" aria-label="Cookie consent" style="display: none;">
+  <p class="consent-text">
+    We use <a href="https://grafana.com/docs/grafana-cloud/monitor-applications/frontend-observability/" target="_blank" rel="noopener noreferrer">Grafana Faro</a> to collect anonymous telemetry — errors, performance, and page loads — to improve this site. No advertising, no third-party sharing.
+  </p>
+  <div class="consent-actions">
+    <button id="consent-decline" class="consent-btn consent-btn--decline">Decline</button>
+    <button id="consent-accept" class="consent-btn consent-btn--accept">Accept</button>
+  </div>
+</div>
+
+<script>
+  import { faro } from '@grafana/faro-web-sdk';
+
+  const CONSENT_KEY = 'cc-consent';
+  const banner = document.getElementById('consent-banner') as HTMLElement;
+  const stored = localStorage.getItem(CONSENT_KEY);
+
+  function showBanner() {
+    banner.style.display = 'flex';
+  }
+
+  function hideBanner() {
+    banner.style.display = 'none';
+  }
+
+  if (stored === 'accepted') {
+    faro.unpause();
+  } else if (!stored) {
+    showBanner();
+  }
+
+  document.getElementById('consent-accept')?.addEventListener('click', () => {
+    localStorage.setItem(CONSENT_KEY, 'accepted');
+    faro.unpause();
+    hideBanner();
+  });
+
+  document.getElementById('consent-decline')?.addEventListener('click', () => {
+    localStorage.setItem(CONSENT_KEY, 'declined');
+    hideBanner();
+  });
+
+  document.addEventListener('show-consent-banner', () => {
+    localStorage.removeItem(CONSENT_KEY);
+    showBanner();
+  });
+</script>
+
+<style>
+  .consent-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1rem 2rem;
+    background: var(--color-surface-raised);
+    border-top: 1px solid var(--color-border);
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+  }
+
+  .consent-text {
+    margin: 0;
+    flex: 1;
+  }
+
+  .consent-text a {
+    color: var(--color-accent);
+  }
+
+  .consent-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .consent-btn {
+    padding: 0.4rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--color-border);
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+
+  .consent-btn--decline {
+    background: transparent;
+    color: var(--color-text-muted);
+  }
+
+  .consent-btn--decline:hover {
+    color: var(--color-text);
+    border-color: var(--color-text-muted);
+  }
+
+  .consent-btn--accept {
+    background: var(--color-accent);
+    color: #fff;
+    border-color: var(--color-accent);
+  }
+
+  .consent-btn--accept:hover {
+    background: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+  }
+
+  @media (max-width: 640px) {
+    .consent-banner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+  }
+</style>

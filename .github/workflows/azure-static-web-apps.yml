@@ -31,10 +31,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Set build version
+        id: version
+        run: echo "value=$(TZ=UTC git log -1 --format="%cd" --date=format:"%Y%m%d.%H%M%S")" >> $GITHUB_OUTPUT
+
       - name: Build
         run: npm run build
         env:
           FARO_API_KEY: ${{ secrets.FARO_API_KEY }}
+          PUBLIC_BUILD_VERSION: ${{ steps.version.outputs.value }}
 
       - name: Run unit tests with coverage
         run: npm run test:coverage

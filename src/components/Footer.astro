@@ -1,13 +1,24 @@
 ---
 const year = new Date().getFullYear();
+const buildVersion = import.meta.env.PUBLIC_BUILD_VERSION;
 ---
 
 <footer class="site-footer">
   <div class="container footer-inner">
-    <p class="footer-brand">🍳 Cooking<strong class="footer-brand-accent">Code</strong> — code that's well done.</p>
+    <p class="footer-brand">Cooking<strong class="footer-brand-accent">Code</strong> — code that's well done.</p>
     <p class="footer-copy">&copy; {year} Cooking Code. Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>.</p>
+    <p class="footer-version">{buildVersion}</p>
+    <p class="footer-prefs">
+      <button id="cookie-prefs-btn" class="cookie-prefs-btn">Cookie preferences</button>
+    </p>
   </div>
 </footer>
+
+<script>
+  document.getElementById('cookie-prefs-btn')?.addEventListener('click', () => {
+    document.dispatchEvent(new CustomEvent('show-consent-banner'));
+  });
+</script>
 
 <style>
   .site-footer {
@@ -28,7 +39,7 @@ const year = new Date().getFullYear();
     margin: 0;
     font-size: 1rem;
     color: var(--color-text);
-    font-weight: 600;
+    font-weight: 400;
   }
 
   .footer-brand-accent {
@@ -43,5 +54,34 @@ const year = new Date().getFullYear();
 
   .footer-copy a {
     color: var(--color-accent);
+  }
+
+  .footer-version {
+    margin: 0;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.5;
+  }
+
+  .footer-prefs {
+    margin: 0;
+  }
+
+  .cookie-prefs-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.75rem;
+    font-family: var(--font-sans);
+    color: var(--color-text-muted);
+    opacity: 0.5;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .cookie-prefs-btn:hover {
+    opacity: 0.8;
   }
 </style>
