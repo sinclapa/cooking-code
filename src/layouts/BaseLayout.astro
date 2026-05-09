@@ -2,6 +2,7 @@
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import ConsentBanner from '../components/ConsentBanner.astro';
+import SearchDialog from '../components/SearchDialog.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -27,8 +28,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         document.documentElement.dataset.theme = saved || (prefersDark ? 'dark' : 'light');
       })();
     </script>
-    <link rel="icon" type="image/x-icon" href="/branding/cc-logo-white-simple.ico" />
-    <link rel="icon" type="image/svg+xml" href="/branding/cc-logo-white-simple.svg" />
+    <link rel="icon" type="image/x-icon" href="/branding/cc-logo-black-simple.ico" />
     <link rel="apple-touch-icon" href="/branding/cc-logo-white-simple.png" />
     <meta name="generator" content={Astro.generator} />
 
@@ -56,6 +56,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     </main>
     <Footer />
     <ConsentBanner />
+    <SearchDialog />
     <script is:inline>
       document.querySelectorAll('pre').forEach((pre) => {
         if (pre.classList.contains('mermaid')) return;
