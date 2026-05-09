@@ -53,17 +53,18 @@ jobs:
 
       # -----------------------------------------------------------------------
       # SonarQube analysis
-      # Runs automatically when the SONAR_TOKEN secret is configured.
-      # Add the following repository secrets to enable this step:
-      #   SONAR_TOKEN  — token generated in your SonarQube / SonarCloud account
+      # Runs automatically when the SONAR_TOKEN secret and SONAR_HOST_URL variable are configured.
+      # Add the following to your repository to enable this step:
+      #   Secret: SONAR_TOKEN       — token generated in your SonarCloud account
+      #   Variable: SONAR_HOST_URL  — e.g. https://sonarcloud.io
       # And update sonar-project.properties with your project key / host URL.
       # -----------------------------------------------------------------------
       - name: SonarQube Scan
-        if: ${{ env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != '' }}
+        if: ${{ secrets.SONAR_TOKEN != '' && vars.SONAR_HOST_URL != '' }}
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
 
   deploy-preview:
     name: Deploy Preview
