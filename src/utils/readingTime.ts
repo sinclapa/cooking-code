@@ -5,8 +5,8 @@ function normalizeMarkdown(markdown: string): string {
     .replaceAll(/```[\s\S]*?```/g, ' ')
     .replaceAll(/`[^`]*`/g, ' ')
     .replaceAll(/!\[[^\]]*\]\([^)]*\)/g, ' ')
-    .replaceAll(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replaceAll(/<[^>]+>/g, ' ')
+    .replaceAll(/\[([^\]\n]+)\]\([^)\n]*\)/g, '$1')
+    .replaceAll(/<[^>\n]+>/g, ' ')
     .replaceAll(/[#>*_~-]/g, ' ');
 }
 
