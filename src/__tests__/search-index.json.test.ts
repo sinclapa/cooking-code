@@ -4,7 +4,7 @@ vi.mock('astro:content', () => ({
   getCollection: vi.fn(),
 }));
 
-import { GET } from './search-index.json';
+import { GET } from '../pages/search-index.json';
 import { getCollection } from 'astro:content';
 
 const mockGetCollection = vi.mocked(getCollection);
