@@ -19,6 +19,14 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Apply saved theme before first paint to prevent flash -->
+    <script is:inline>
+      (function () {
+        var saved = localStorage.getItem('theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.theme = saved || (prefersDark ? 'dark' : 'light');
+      })();
+    </script>
     <link rel="icon" type="image/x-icon" href="/branding/cc-logo-white-simple.ico" />
     <link rel="icon" type="image/svg+xml" href="/branding/cc-logo-white-simple.svg" />
     <link rel="apple-touch-icon" href="/branding/cc-logo-white-simple.png" />
@@ -50,6 +58,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <ConsentBanner />
     <script is:inline>
       document.querySelectorAll('pre').forEach((pre) => {
+        if (pre.classList.contains('mermaid')) return;
         const btn = document.createElement('button');
         btn.className = 'copy-code-btn';
         btn.textContent = 'Copy';
@@ -62,6 +71,100 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         });
         pre.appendChild(btn);
       });
+    </script>
+    <script>
+      const diagrams = document.querySelectorAll('pre.mermaid');
+      if (diagrams.length > 0) {
+        const { default: mermaid } = await import('mermaid');
+
+        // Store original diagram text before first render so we can re-render on theme change
+        diagrams.forEach((pre) => { pre.dataset.diagram = pre.textContent ?? ''; });
+
+        function mermaidThemeConfig(theme) {
+          return theme === 'light'
+            ? { theme: 'default', themeVariables: {} }
+            : {
+                theme: 'dark',
+                themeVariables: {
+                  edgeLabelBackground: '#0f172a',
+                  lineColor: '#94a3b8',
+                  clusterBkg: '#1e293b',
+                  clusterBorder: '#334155',
+                  titleColor: '#f1f5f9',
+                },
+              };
+        }
+
+        async function renderDiagrams(theme) {
+          mermaid.initialize({ startOnLoad: false, ...mermaidThemeConfig(theme) });
+          diagrams.forEach((pre) => { pre.textContent = pre.dataset.diagram ?? ''; });
+          await mermaid.run({ nodes: diagrams });
+        }
+
+        const initialTheme = document.documentElement.dataset.theme ?? 'dark';
+        await renderDiagrams(initialTheme);
+
+        document.documentElement.addEventListener('themechange', (e) => {
+          renderDiagrams(e.detail.theme);
+        });
+
+        const expandIcon = `<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M0 0H4.5V1.5H1.5V4.5H0ZM7.5 0H12V4.5H10.5V1.5H7.5ZM0 7.5H1.5V10.5H4.5V12H0ZM10.5 7.5H12V12H7.5V10.5H10.5Z"/></svg>`;
+
+        function openDiagramModal(pre) {
+          const svg = pre.querySelector('svg');
+          if (!svg) return;
+
+          const overlay = document.createElement('div');
+          overlay.className = 'mermaid-modal';
+          overlay.setAttribute('role', 'dialog');
+          overlay.setAttribute('aria-modal', 'true');
+
+          const content = document.createElement('div');
+          content.className = 'mermaid-modal-content';
+
+          const clonedSvg = svg.cloneNode(true);
+          clonedSvg.removeAttribute('width');
+          clonedSvg.removeAttribute('height');
+          clonedSvg.style.cssText = '';
+          content.appendChild(clonedSvg);
+
+          const closeBtn = document.createElement('button');
+          closeBtn.className = 'mermaid-modal-close';
+          closeBtn.setAttribute('aria-label', 'Close diagram');
+          closeBtn.textContent = '✕';
+
+          overlay.appendChild(content);
+          overlay.appendChild(closeBtn);
+          document.body.appendChild(overlay);
+          document.body.style.overflow = 'hidden';
+
+          requestAnimationFrame(() => overlay.classList.add('is-open'));
+          closeBtn.focus();
+
+          const close = () => {
+            overlay.classList.remove('is-open');
+            overlay.addEventListener('transitionend', () => {
+              overlay.remove();
+              document.body.style.overflow = '';
+            }, { once: true });
+            document.removeEventListener('keydown', onKey);
+          };
+
+          const onKey = (e) => { if (e.key === 'Escape') close(); };
+          overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+          closeBtn.addEventListener('click', close);
+          document.addEventListener('keydown', onKey);
+        }
+
+        diagrams.forEach((pre) => {
+          const btn = document.createElement('button');
+          btn.className = 'mermaid-expand-btn';
+          btn.title = 'View full size';
+          btn.innerHTML = expandIcon;
+          btn.addEventListener('click', () => openDiagramModal(pre));
+          pre.appendChild(btn);
+        });
+      }
     </script>
   </body>
 </html>

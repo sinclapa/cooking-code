@@ -14,7 +14,8 @@
   "dependencies": {
     "@grafana/faro-web-sdk": "^2.4.0",
     "@grafana/faro-web-tracing": "^2.4.0",
-    "astro": "^5.18.1"
+    "astro": "^5.18.1",
+    "mermaid": "^11.14.0"
   },
   "devDependencies": {
     "@grafana/faro-rollup-plugin": "^0.10.0",

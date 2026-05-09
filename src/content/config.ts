@@ -24,6 +24,9 @@ const articles = defineCollection({
     tags: z.array(z.string()).default([]),
     author: z.string().default('Cooking Code Team'),
     difficulty: z.enum(['beginner', 'intermediate', 'advanced']).default('intermediate'),
+    series: z.string().optional(),
+    seriesOrder: z.number().optional(),
+    seriesTitle: z.string().optional(),
   }),
 });
 

@@ -7,8 +7,28 @@ if (!process.env.PUBLIC_BUILD_VERSION) {
   process.env.PUBLIC_BUILD_VERSION = `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}.${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}`;
 }
 
+function remarkMermaid() {
+  return (tree) => {
+    function visit(node) {
+      if (node.type === 'code' && node.lang === 'mermaid') {
+        const escaped = node.value
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        node.type = 'html';
+        node.value = `<pre class="mermaid">${escaped}</pre>`;
+      }
+      if (node.children) node.children.forEach(visit);
+    }
+    visit(tree);
+  };
+}
+
 export default defineConfig({
   site: 'https://cooking-code.dev',
+  markdown: {
+    remarkPlugins: [remarkMermaid],
+  },
   vite: {
     plugins: [
       process.env.NODE_ENV === 'production' && faroUploader({

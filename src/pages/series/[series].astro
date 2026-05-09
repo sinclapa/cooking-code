@@ -1,0 +1,170 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { calculateReadingTime, formatReadingTime } from '../../utils/readingTime';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+
+  const seriesMap = new Map<string, { title: string; articles: typeof articles }>();
+  for (const article of articles) {
+    const { series, seriesTitle } = article.data;
+    if (!series) continue;
+    if (!seriesMap.has(series)) {
+      seriesMap.set(series, { title: seriesTitle ?? series, articles: [] });
+    }
+    seriesMap.get(series)!.articles.push(article);
+  }
+
+  return Array.from(seriesMap.entries()).map(([series, { title, articles: seriesArticles }]) => ({
+    params: { series },
+    props: {
+      seriesKey: series,
+      seriesTitle: title,
+      articles: seriesArticles.sort(
+        (a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0)
+      ),
+    },
+  }));
+}
+
+const { seriesTitle, articles } = Astro.props;
+---
+
+<BaseLayout
+  title={`${seriesTitle} — Series`}
+  description={`All articles in the ${seriesTitle} series, in reading order.`}
+>
+  <div class="page-header">
+    <div class="container">
+      <p class="page-eyebrow">
+        <svg class="eyebrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+        Series
+      </p>
+      <h1 class="page-title">{seriesTitle}</h1>
+      <p class="page-subtitle">{articles.length} articles, in reading order.</p>
+    </div>
+  </div>
+
+  <div class="container series-list">
+    {articles.map((article, i) => (
+      <a href={`/articles/${article.slug}`} class="series-row">
+        <div class="series-row-order">{i + 1}</div>
+        <div class="series-row-body">
+          <h2 class="series-row-title">{article.data.title}</h2>
+          <p class="series-row-desc">{article.data.description}</p>
+          <div class="series-row-meta">
+            <span class={`badge badge--${article.data.difficulty}`}>{article.data.difficulty}</span>
+            <span class="read-time">{formatReadingTime(calculateReadingTime(article.body))}</span>
+          </div>
+        </div>
+        <span class="series-row-arrow" aria-hidden="true">→</span>
+      </a>
+    ))}
+  </div>
+</BaseLayout>
+
+<style>
+  .page-header {
+    background: linear-gradient(180deg, var(--color-surface) 0%, transparent 100%);
+    border-bottom: 1px solid var(--color-border);
+    padding: 4rem 0 3rem;
+    margin-bottom: 3rem;
+  }
+
+  .page-eyebrow {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-accent-article);
+    margin: 0 0 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .eyebrow-icon { flex-shrink: 0; }
+
+  .page-title { margin-bottom: 0.75rem; }
+
+  .page-subtitle {
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  .series-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-bottom: 4rem;
+  }
+
+  .series-row {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr auto;
+    align-items: start;
+    gap: 1.5rem;
+    padding: 1.75rem 0;
+    border-bottom: 1px solid var(--color-border);
+    text-decoration: none;
+    color: var(--color-text);
+    transition: all 0.2s;
+  }
+
+  .series-row:hover { padding-left: 0.5rem; }
+  .series-row:hover .series-row-title { color: var(--color-accent-article); }
+  .series-row:hover .series-row-arrow { transform: translateX(4px); color: var(--color-accent-article); }
+
+  .series-row-order {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-border);
+    line-height: 1;
+    padding-top: 0.25rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .series-row-title {
+    font-size: 1.2rem;
+    margin: 0 0 0.5rem;
+    line-height: 1.4;
+    transition: color 0.2s;
+  }
+
+  .series-row-desc {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin: 0 0 0.75rem;
+    line-height: 1.6;
+  }
+
+  .series-row-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .read-time {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  .series-row-arrow {
+    font-size: 1.25rem;
+    color: var(--color-border);
+    transition: all 0.2s;
+    padding-top: 0.2rem;
+  }
+
+  @media (max-width: 640px) {
+    .series-row {
+      grid-template-columns: 2rem 1fr auto;
+      gap: 1rem;
+    }
+  }
+</style>

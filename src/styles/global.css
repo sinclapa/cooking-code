@@ -2,7 +2,7 @@
    Cooking Code — Global Styles
    ===================================================== */
 
-/* CSS Custom Properties */
+/* CSS Custom Properties — Dark theme (default) */
 :root {
   --color-bg: #0f0f12;
   --color-surface: #18181f;
@@ -15,6 +15,13 @@
   --color-accent-2: #7c5cbf;
   --color-accent-blog: #22d3a7;
   --color-accent-article: #7c5cbf;
+  --color-header-bg: rgba(15, 15, 18, 0.85);
+  --color-badge-beginner-bg: #164f3a;
+  --color-badge-beginner-text: #22d3a7;
+  --color-badge-intermediate-bg: #2d2450;
+  --color-badge-intermediate-text: #a78bfa;
+  --color-badge-advanced-bg: #4a1a1a;
+  --color-badge-advanced-text: #f87171;
 
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', 'Fira Mono', monospace;
@@ -25,6 +32,28 @@
 
   --max-width: 1100px;
   --content-width: 720px;
+}
+
+/* Light theme overrides */
+[data-theme="light"] {
+  --color-bg: #f6f6fb;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ededf5;
+  --color-border: #d0d0e2;
+  --color-text: #13131e;
+  --color-text-muted: #5c5c78;
+  --color-accent: #e05520;
+  --color-accent-hover: #f06530;
+  --color-accent-2: #6b4db0;
+  --color-accent-blog: #0b8f6f;
+  --color-accent-article: #6b4db0;
+  --color-header-bg: rgba(246, 246, 251, 0.9);
+  --color-badge-beginner-bg: #d4f5ec;
+  --color-badge-beginner-text: #0c7a5e;
+  --color-badge-intermediate-bg: #e6e0f8;
+  --color-badge-intermediate-text: #5a3baa;
+  --color-badge-advanced-bg: #fde8e8;
+  --color-badge-advanced-text: #c43535;
 }
 
 /* Reset & Base */
@@ -163,6 +192,110 @@ pre:hover .copy-code-btn {
   opacity: 1;
 }
 
+/* Mermaid diagrams */
+pre.mermaid {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  text-align: center;
+  overflow-x: auto;
+}
+
+pre.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-expand-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.3rem 0.4rem;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+  line-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+pre.mermaid:hover .mermaid-expand-btn {
+  opacity: 1;
+}
+
+.mermaid-expand-btn:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.mermaid-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+  padding: 2rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.mermaid-modal.is-open {
+  opacity: 1;
+}
+
+.mermaid-modal-content {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  width: calc(100vw - 4rem);
+  height: calc(100vh - 4rem);
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+}
+
+.mermaid-modal.is-open .mermaid-modal-content {
+  transform: scale(1);
+}
+
+.mermaid-modal-content svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mermaid-modal-close {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  color: var(--color-text);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.mermaid-modal-close:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
 /* Tables */
 table {
   width: 100%;
@@ -242,6 +375,19 @@ hr {
   border-radius: 999px;
 }
 
-.badge--beginner { background: #164f3a; color: #22d3a7; }
-.badge--intermediate { background: #2d2450; color: #a78bfa; }
-.badge--advanced { background: #4a1a1a; color: #f87171; }
+.badge--beginner { background: var(--color-badge-beginner-bg); color: var(--color-badge-beginner-text); }
+.badge--intermediate { background: var(--color-badge-intermediate-bg); color: var(--color-badge-intermediate-text); }
+.badge--advanced { background: var(--color-badge-advanced-bg); color: var(--color-badge-advanced-text); }
+
+/* Theme-switched elements — must live in global.css, not scoped component styles */
+.logo-icon--light { display: none; }
+[data-theme="light"] .logo-icon--dark { display: none; }
+[data-theme="light"] .logo-icon--light { display: block; }
+
+.hero-logo--light { display: none; }
+[data-theme="light"] .hero-logo--dark { display: none; }
+[data-theme="light"] .hero-logo--light { display: block; }
+
+.icon-moon { display: none; }
+[data-theme="light"] .icon-moon { display: block; }
+[data-theme="light"] .icon-sun { display: none; }

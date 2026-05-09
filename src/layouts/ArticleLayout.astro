@@ -6,9 +6,11 @@ import { formatReadingTime } from '../utils/readingTime';
 interface Props {
   article: CollectionEntry<'articles'>;
   readingTimeMinutes: number;
+  prevArticle?: CollectionEntry<'articles'> | null;
+  nextArticle?: CollectionEntry<'articles'> | null;
 }
 
-const { article, readingTimeMinutes } = Astro.props;
+const { article, readingTimeMinutes, prevArticle, nextArticle } = Astro.props;
 const { title, description, pubDate, updatedDate, heroImage, tags, author, difficulty } = article.data;
 
 const formattedDate = pubDate.toLocaleDateString('en-US', {
@@ -60,6 +62,29 @@ const formattedUpdated = updatedDate?.toLocaleDateString('en-US', {
       <div class="article-body content-width">
         <slot />
         <div class="article-footer">
+          {(prevArticle || nextArticle) && (
+            <nav class="series-nav" aria-label="Series navigation">
+              <div class="series-nav-label">Part of the CCDiary series</div>
+              <div class="series-nav-links">
+                {prevArticle ? (
+                  <a href={`/articles/${prevArticle.slug}`} class="series-nav-link series-nav-link--prev">
+                    <span class="series-nav-direction">← Previous</span>
+                    <span class="series-nav-title">{prevArticle.data.title}</span>
+                  </a>
+                ) : (
+                  <div />
+                )}
+                {nextArticle ? (
+                  <a href={`/articles/${nextArticle.slug}`} class="series-nav-link series-nav-link--next">
+                    <span class="series-nav-direction">Next →</span>
+                    <span class="series-nav-title">{nextArticle.data.title}</span>
+                  </a>
+                ) : (
+                  <div />
+                )}
+              </div>
+            </nav>
+          )}
           <a href="/articles" class="back-link">← Back to Articles</a>
         </div>
       </div>
@@ -151,6 +176,72 @@ const formattedUpdated = updatedDate?.toLocaleDateString('en-US', {
     margin-top: 4rem;
     padding-top: 2rem;
     border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .series-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .series-nav-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-accent-article);
+  }
+
+  .series-nav-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .series-nav-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .series-nav-link:hover {
+    border-color: var(--color-accent-article);
+    background: color-mix(in srgb, var(--color-accent-article) 8%, transparent);
+  }
+
+  .series-nav-link--next {
+    text-align: right;
+  }
+
+  .series-nav-direction {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+
+  .series-nav-title {
+    font-size: 0.88rem;
+    color: var(--color-text);
+    line-height: 1.4;
+  }
+
+  @media (max-width: 600px) {
+    .series-nav-links {
+      grid-template-columns: 1fr;
+    }
+
+    .series-nav-link--next {
+      text-align: left;
+    }
   }
 
   .back-link {
