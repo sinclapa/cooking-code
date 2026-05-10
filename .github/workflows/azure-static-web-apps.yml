@@ -17,6 +17,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
     permissions:
       contents: read
+      pull-requests: write
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -70,6 +71,105 @@ jobs:
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+
+      - name: SonarCloud quality gate comment
+        if: ${{ env.SONAR_TOKEN != '' && vars.SONAR_HOST_URL != '' && github.event_name == 'pull_request' }}
+        continue-on-error: true
+        uses: actions/github-script@v7
+        env:
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        with:
+          script: |
+            const fs = require('fs');
+            const sonarToken = process.env.SONAR_TOKEN;
+            const sonarHostUrl = process.env.SONAR_HOST_URL;
+            const auth = Buffer.from(`${sonarToken}:`).toString('base64');
+            const headers = { Authorization: `Basic ${auth}` };
+
+            // Read task ID produced by the scan action
+            const report = fs.readFileSync('.scannerwork/report-task.txt', 'utf8');
+            const ceTaskId = report.match(/ceTaskId=(.+)/)?.[1]?.trim();
+            if (!ceTaskId) throw new Error('ceTaskId not found in report-task.txt');
+
+            // Poll until analysis completes (up to ~2 min)
+            let analysisId;
+            for (let i = 0; i < 24; i++) {
+              await new Promise(r => setTimeout(r, 5000));
+              const res = await fetch(`${sonarHostUrl}/api/ce/task?id=${ceTaskId}`, { headers });
+              const { task } = await res.json();
+              if (task.status === 'SUCCESS') { analysisId = task.analysisId; break; }
+              if (task.status === 'FAILED' || task.status === 'CANCELLED') {
+                throw new Error(`SonarCloud analysis ${task.status}`);
+              }
+            }
+            if (!analysisId) throw new Error('Timed out waiting for SonarCloud analysis');
+
+            // Fetch quality gate conditions
+            const qgRes = await fetch(
+              `${sonarHostUrl}/api/qualitygates/project_status?analysisId=${analysisId}`,
+              { headers }
+            );
+            const { projectStatus } = await qgRes.json();
+            const passed = projectStatus.status === 'OK';
+
+            const metricLabels = {
+              new_reliability_rating:         'Reliability',
+              new_security_rating:            'Security',
+              new_maintainability_rating:     'Maintainability',
+              new_coverage:                   'Coverage',
+              new_duplicated_lines_density:   'Duplication',
+              new_security_hotspots_reviewed: 'Security hotspots reviewed',
+            };
+            const ratingNames = { '1': 'A', '2': 'B', '3': 'C', '4': 'D', '5': 'E' };
+
+            const rows = (projectStatus.conditions || []).map(c => {
+              const ok = c.status === 'OK';
+              const label = metricLabels[c.metricKey] ?? c.metricKey;
+              let value = c.actualValue ?? '—';
+              if (c.metricKey.endsWith('_rating')) value = ratingNames[value] ?? value;
+              else if (c.metricKey === 'new_coverage') value = `${parseFloat(value).toFixed(1)}%`;
+              else if (c.metricKey === 'new_duplicated_lines_density') value = `${parseFloat(value).toFixed(1)}%`;
+              else if (c.metricKey === 'new_security_hotspots_reviewed') value = `${parseFloat(value).toFixed(0)}%`;
+              return `| ${ok ? '✅' : '❌'} ${label} | ${value} |`;
+            }).join('\n');
+
+            const prNumber = context.issue.number;
+            const marker = '<!-- sonar-qg -->';
+            const body = [
+              marker,
+              `### ${passed ? '✅' : '❌'} SonarCloud Quality Gate: ${passed ? 'Passed' : 'Failed'}`,
+              '',
+              '| Metric | Value |',
+              '|--------|-------|',
+              rows,
+              '',
+              `[View full report →](${sonarHostUrl}/summary/new_code?id=sinclapa_cooking-code&pullRequest=${prNumber})`,
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+            const existing = comments.find(c =>
+              c.user.login === 'github-actions[bot]' && c.body.includes(marker)
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body,
+              });
+            }
 
   deploy-preview:
     name: Deploy Preview
