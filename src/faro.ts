@@ -1,11 +1,15 @@
 import { getWebInstrumentations, initializeFaro } from '@grafana/faro-web-sdk';
 import { TracingInstrumentation } from '@grafana/faro-web-tracing';
 
-const hostname = window.location.hostname;
-const environment =
-  hostname === 'localhost' || hostname === '127.0.0.1' ? 'local' :
-  hostname.endsWith('.azurestaticapps.net') ? 'preview' :
-  'production';
+const hostname = globalThis.location.hostname;
+let environment: string;
+if (hostname === 'localhost' || hostname === '127.0.0.1') {
+  environment = 'local';
+} else if (hostname.endsWith('.azurestaticapps.net')) {
+  environment = 'preview';
+} else {
+  environment = 'production';
+}
 
 initializeFaro({
   paused: true,
