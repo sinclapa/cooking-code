@@ -63,7 +63,6 @@
 
   document.addEventListener('show-consent-banner', () => {
     const current = parseConsentValue(localStorage.getItem(CONSENT_KEY));
-    localStorage.removeItem(CONSENT_KEY);
     showBanner(current);
   });
 </script>
