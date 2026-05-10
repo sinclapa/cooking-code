@@ -17,6 +17,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
     permissions:
       contents: read
+      pull-requests: write
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -70,6 +71,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: -Dsonar.qualitygate.wait=true
 
