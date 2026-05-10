@@ -11,7 +11,7 @@ if (hostname === 'localhost' || hostname === '127.0.0.1') {
   environment = 'production';
 }
 
-initializeFaro({
+const faroInstance = initializeFaro({
   paused: true,
   url: 'https://faro-collector-prod-gb-south-1.grafana.net/collect/79209a4e27e1814360531191874e54dc',
   app: {
@@ -34,4 +34,12 @@ initializeFaro({
     /chrome-extension:\/\//,
     /moz-extension:\/\//,
   ],
+});
+
+if (localStorage.getItem('cc-consent') === 'accepted') {
+  faroInstance.unpause();
+}
+
+document.addEventListener('cc-consent-accepted', () => {
+  faroInstance.unpause();
 });
