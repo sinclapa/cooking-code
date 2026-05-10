@@ -6,46 +6,65 @@
     We use <a href="https://grafana.com/docs/grafana-cloud/monitor-applications/frontend-observability/" target="_blank" rel="noopener noreferrer">Grafana Faro</a> to collect anonymous telemetry — errors, performance, and page loads — to improve this site. No advertising, no third-party sharing.
   </p>
   <div class="consent-actions">
+    <span id="consent-current-status" class="consent-current-status" hidden></span>
     <button id="consent-decline" class="consent-btn consent-btn--decline">Decline</button>
     <button id="consent-accept" class="consent-btn consent-btn--accept">Accept</button>
   </div>
 </div>
 
 <script>
-  import { faro } from '@grafana/faro-web-sdk';
+  import {
+    CONSENT_KEY,
+    parseConsentValue,
+    shouldShowBannerOnLoad,
+    getStatusLabel,
+    getActiveButton,
+  } from '../utils/consent';
 
-  const CONSENT_KEY = 'cc-consent';
   const banner = document.getElementById('consent-banner') as HTMLElement;
-  const stored = localStorage.getItem(CONSENT_KEY);
+  const acceptBtn = document.getElementById('consent-accept') as HTMLButtonElement;
+  const declineBtn = document.getElementById('consent-decline') as HTMLButtonElement;
+  const statusEl = document.getElementById('consent-current-status') as HTMLElement;
 
-  function showBanner() {
+  function showBanner(current = parseConsentValue(null)) {
+    const activeBtn = getActiveButton(current);
+    acceptBtn.classList.toggle('consent-btn--current', activeBtn === 'accept');
+    declineBtn.classList.toggle('consent-btn--current', activeBtn === 'decline');
+    const label = getStatusLabel(current);
+    if (label && statusEl) {
+      statusEl.textContent = label;
+      statusEl.removeAttribute('hidden');
+    }
     banner.style.display = 'flex';
   }
 
   function hideBanner() {
+    acceptBtn.classList.remove('consent-btn--current');
+    declineBtn.classList.remove('consent-btn--current');
+    if (statusEl) statusEl.setAttribute('hidden', '');
     banner.style.display = 'none';
   }
 
-  if (stored === 'accepted') {
-    faro.unpause();
-  } else if (!stored) {
+  const stored = parseConsentValue(localStorage.getItem(CONSENT_KEY));
+  if (shouldShowBannerOnLoad(stored)) {
     showBanner();
   }
 
-  document.getElementById('consent-accept')?.addEventListener('click', () => {
+  acceptBtn?.addEventListener('click', () => {
     localStorage.setItem(CONSENT_KEY, 'accepted');
-    faro.unpause();
+    document.dispatchEvent(new CustomEvent('cc-consent-accepted'));
     hideBanner();
   });
 
-  document.getElementById('consent-decline')?.addEventListener('click', () => {
+  declineBtn?.addEventListener('click', () => {
     localStorage.setItem(CONSENT_KEY, 'declined');
     hideBanner();
   });
 
   document.addEventListener('show-consent-banner', () => {
+    const current = parseConsentValue(localStorage.getItem(CONSENT_KEY));
     localStorage.removeItem(CONSENT_KEY);
-    showBanner();
+    showBanner(current);
   });
 </script>
 
@@ -112,6 +131,24 @@
   .consent-btn--accept:hover {
     background: var(--color-accent-hover);
     border-color: var(--color-accent-hover);
+  }
+
+  .consent-btn--current {
+    box-shadow: 0 0 0 2px var(--color-surface-raised), 0 0 0 4px var(--color-accent);
+  }
+
+  .consent-btn--decline.consent-btn--current {
+    background: color-mix(in srgb, var(--color-text-muted) 15%, transparent);
+    color: var(--color-text);
+    border-color: var(--color-text-muted);
+  }
+
+  .consent-current-status {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    align-self: center;
+    font-style: italic;
   }
 
   @media (max-width: 640px) {
