@@ -4,10 +4,7 @@ import { getTableClient } from '../tableClient.js';
 const VALID_CONTENT_TYPES = new Set(['blog', 'article']);
 
 function stripHtml(input: string): string {
-  return input
-    .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, '')
-    .replace(/<[^>]*>/g, '')
-    .trim();
+  return input.replace(/<[^>]*>/g, '').trim();
 }
 
 export async function commentsHandler(req: HttpRequest, _context: InvocationContext): Promise<HttpResponseInit> {

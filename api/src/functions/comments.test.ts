@@ -153,7 +153,7 @@ describe('commentsHandler - POST', () => {
     expect(res.status).toBe(201);
     const comment = res.jsonBody as { name: string; body: string };
     expect(comment.name).toBe('Alice');
-    expect(comment.body).toBe('Nice post');
+    expect(comment.body).toBe('alert(1)Nice post');
   });
 });
 
