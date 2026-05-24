@@ -2,6 +2,7 @@
 import type { CollectionEntry } from 'astro:content';
 import BaseLayout from './BaseLayout.astro';
 import { formatReadingTime } from '../utils/readingTime';
+import FeedbackWidget from '../components/FeedbackWidget.astro';
 
 interface Props {
   post: CollectionEntry<'blog'>;
@@ -58,6 +59,7 @@ const formattedUpdated = updatedDate?.toLocaleDateString('en-US', {
     <div class="container">
       <div class="post-body content-width">
         <slot />
+        <FeedbackWidget contentType="blog" slug={post.slug} />
         <div class="post-footer">
           <a href="/blog" class="back-link">← Back to Blog</a>
         </div>

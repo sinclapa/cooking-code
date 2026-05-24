@@ -1,0 +1,416 @@
+---
+interface Props {
+  contentType: 'blog' | 'article';
+  slug: string;
+}
+
+const { contentType, slug } = Astro.props;
+---
+
+<section class="feedback-widget" data-content-type={contentType} data-slug={slug} aria-label="Post feedback">
+  <div class="feedback-rating">
+    <p class="feedback-prompt">Was this helpful?</p>
+    <div class="feedback-buttons" role="group" aria-label="Rate this content">
+      <button class="feedback-btn feedback-btn--up" aria-label="Thumbs up" data-rating="up">
+        👍 <span class="feedback-count up-count" aria-live="polite">–</span>
+      </button>
+      <button class="feedback-btn feedback-btn--down" aria-label="Thumbs down" data-rating="down">
+        👎 <span class="feedback-count down-count" aria-live="polite">–</span>
+      </button>
+    </div>
+    <p class="feedback-thanks" hidden aria-live="polite">Thanks for your feedback!</p>
+  </div>
+
+  <div class="feedback-comments">
+    <button class="comments-toggle" aria-expanded="false" aria-controls="comments-section">
+      Comments <span class="comments-count"></span>
+    </button>
+
+    <div id="comments-section" class="comments-section" hidden>
+      <div class="comments-list" aria-label="Comments" aria-live="polite"></div>
+
+      <form class="comment-form" novalidate>
+        <h3 class="comment-form-title">Leave a comment</h3>
+        <div class="form-field">
+          <label for="comment-name">Name</label>
+          <input id="comment-name" name="name" type="text" maxlength="60" placeholder="Your name" required />
+          <span class="field-error" aria-live="polite"></span>
+        </div>
+        <div class="form-field">
+          <label for="comment-body">Comment</label>
+          <textarea id="comment-body" name="body" maxlength="1000" rows="4" placeholder="Share your thoughts…" required></textarea>
+          <span class="field-error" aria-live="polite"></span>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="submit-btn">Post comment</button>
+          <span class="submit-error" aria-live="polite"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { loadFeedbackCounts, submitRating, loadComments, submitComment, hasVoted, markVoted } from '../utils/feedback.js';
+  import type { Comment } from '../utils/feedback.js';
+
+  function formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function renderComment(comment: Comment): string {
+    return `
+      <div class="comment">
+        <div class="comment-meta">
+          <span class="comment-author">${escapeHtml(comment.name)}</span>
+          <time class="comment-date" datetime="${comment.createdAt}">${formatDate(comment.createdAt)}</time>
+        </div>
+        <p class="comment-body">${escapeHtml(comment.body)}</p>
+      </div>`;
+  }
+
+  function escapeHtml(str: string): string {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  async function initWidget(widget: HTMLElement) {
+    const contentType = widget.dataset.contentType as 'blog' | 'article';
+    const slug = widget.dataset.slug!;
+
+    const upBtn = widget.querySelector<HTMLButtonElement>('.feedback-btn--up')!;
+    const downBtn = widget.querySelector<HTMLButtonElement>('.feedback-btn--down')!;
+    const upCount = widget.querySelector<HTMLElement>('.up-count')!;
+    const downCount = widget.querySelector<HTMLElement>('.down-count')!;
+    const thanksMsg = widget.querySelector<HTMLElement>('.feedback-thanks')!;
+    const toggleBtn = widget.querySelector<HTMLButtonElement>('.comments-toggle')!;
+    const commentsSection = widget.querySelector<HTMLElement>('#comments-section')!;
+    const commentsList = widget.querySelector<HTMLElement>('.comments-list')!;
+    const commentsCountEl = widget.querySelector<HTMLElement>('.comments-count')!;
+    const form = widget.querySelector<HTMLFormElement>('.comment-form')!;
+    const nameInput = widget.querySelector<HTMLInputElement>('#comment-name')!;
+    const bodyInput = widget.querySelector<HTMLTextAreaElement>('#comment-body')!;
+    const submitBtn = widget.querySelector<HTMLButtonElement>('.submit-btn')!;
+
+    // Load initial counts
+    try {
+      const counts = await loadFeedbackCounts(contentType, slug);
+      upCount.textContent = String(counts.thumbsUp);
+      downCount.textContent = String(counts.thumbsDown);
+    } catch {
+      upCount.textContent = '–';
+      downCount.textContent = '–';
+    }
+
+    // Restore voted state
+    if (hasVoted(slug)) {
+      upBtn.disabled = true;
+      downBtn.disabled = true;
+      thanksMsg.hidden = false;
+    }
+
+    // Handle rating click
+    async function handleRating(rating: 'up' | 'down') {
+      if (hasVoted(slug)) return;
+      upBtn.disabled = true;
+      downBtn.disabled = true;
+      try {
+        const counts = await submitRating(contentType, slug, rating);
+        upCount.textContent = String(counts.thumbsUp);
+        downCount.textContent = String(counts.thumbsDown);
+        markVoted(slug);
+        thanksMsg.hidden = false;
+      } catch {
+        upBtn.disabled = false;
+        downBtn.disabled = false;
+      }
+    }
+
+    upBtn.addEventListener('click', () => handleRating('up'));
+    downBtn.addEventListener('click', () => handleRating('down'));
+
+    // Load comments
+    let comments: Comment[] = [];
+    try {
+      comments = await loadComments(contentType, slug);
+      const count = comments.length;
+      commentsCountEl.textContent = count > 0 ? `(${count})` : '';
+      commentsList.innerHTML = comments.length
+        ? comments.map(renderComment).join('')
+        : '<p class="no-comments">No comments yet. Be the first!</p>';
+    } catch {
+      commentsList.innerHTML = '<p class="comments-error">Could not load comments.</p>';
+    }
+
+    // Toggle comments section
+    toggleBtn.addEventListener('click', () => {
+      const isOpen = toggleBtn.getAttribute('aria-expanded') === 'true';
+      toggleBtn.setAttribute('aria-expanded', String(!isOpen));
+      commentsSection.hidden = isOpen;
+    });
+
+    // Handle comment submission
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = nameInput.value.trim();
+      const body = bodyInput.value.trim();
+      const nameError = form.querySelector<HTMLElement>('#comment-name + .field-error')!;
+      const bodyError = form.querySelector<HTMLElement>('#comment-body + .field-error')!;
+      const submitError = form.querySelector<HTMLElement>('.submit-error')!;
+
+      nameError.textContent = '';
+      bodyError.textContent = '';
+      submitError.textContent = '';
+
+      let valid = true;
+      if (!name) { nameError.textContent = 'Name is required.'; valid = false; }
+      else if (name.length > 60) { nameError.textContent = 'Name must be 60 characters or fewer.'; valid = false; }
+      if (!body) { bodyError.textContent = 'Comment is required.'; valid = false; }
+      else if (body.length > 1000) { bodyError.textContent = 'Comment must be 1000 characters or fewer.'; valid = false; }
+      if (!valid) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Posting…';
+      try {
+        const newComment = await submitComment(contentType, slug, name, body);
+        comments = [newComment, ...comments];
+        commentsList.innerHTML = comments.map(renderComment).join('');
+        commentsCountEl.textContent = `(${comments.length})`;
+        form.reset();
+      } catch {
+        submitError.textContent = 'Could not post comment. Please try again.';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Post comment';
+      }
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('.feedback-widget').forEach(initWidget);
+</script>
+
+<style>
+  .feedback-widget {
+    margin-top: 3rem;
+    padding: 2rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .feedback-rating {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .feedback-prompt {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  .feedback-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .feedback-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.875rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: transparent;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    color: var(--color-text);
+  }
+
+  .feedback-btn:hover:not(:disabled) {
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  }
+
+  .feedback-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .feedback-count {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .feedback-thanks {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+    margin: 0;
+  }
+
+  .feedback-comments {
+    border-top: 1px solid var(--color-border);
+    padding-top: 1.25rem;
+  }
+
+  .comments-toggle {
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--color-accent);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .comments-toggle:hover {
+    text-decoration: underline;
+  }
+
+  .comments-count {
+    font-weight: 400;
+    color: var(--color-text-muted);
+  }
+
+  .comments-section {
+    margin-top: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .comment {
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+  }
+
+  .comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .comment-author {
+    font-weight: 600;
+    font-size: 0.88rem;
+  }
+
+  .comment-date {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+  }
+
+  .comment-body {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .no-comments,
+  .comments-error {
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+    margin: 0;
+  }
+
+  .comment-form-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 1rem;
+  }
+
+  .comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .form-field label {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .form-field input,
+  .form-field textarea {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.15s;
+  }
+
+  .form-field input:focus,
+  .form-field textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+
+  .field-error,
+  .submit-error {
+    font-size: 0.78rem;
+    color: #e53e3e;
+    min-height: 1em;
+  }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .submit-btn {
+    padding: 0.5rem 1.25rem;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--color-accent);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .submit-btn:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+</style>
