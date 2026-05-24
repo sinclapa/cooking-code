@@ -145,7 +145,8 @@ jobs:
           api_location: api
           output_location: ""
           skip_app_build: true
-          skip_api_build: true
+          skip_api_build: false
+          api_build_command: echo "API already compiled"
 
       - name: Update PR deploy comment
         uses: actions/github-script@v7
@@ -256,7 +257,8 @@ jobs:
           api_location: api
           output_location: ""
           skip_app_build: true
-          skip_api_build: true
+          skip_api_build: false
+          api_build_command: echo "API already compiled"
 
   close-preview:
     name: Close Preview
