@@ -106,6 +106,10 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Build API
+        run: npm ci && npm run build && npm prune --omit=dev
+        working-directory: api
+
       - uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -141,7 +145,7 @@ jobs:
           api_location: api
           output_location: ""
           skip_app_build: true
-          skip_api_build: false
+          skip_api_build: true
 
       - name: Update PR deploy comment
         uses: actions/github-script@v7
@@ -213,6 +217,10 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Build API
+        run: npm ci && npm run build && npm prune --omit=dev
+        working-directory: api
+
       - uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -248,7 +256,7 @@ jobs:
           api_location: api
           output_location: ""
           skip_app_build: true
-          skip_api_build: false
+          skip_api_build: true
 
   close-preview:
     name: Close Preview
