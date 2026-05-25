@@ -1,3 +1,4 @@
+import './functions/ping.js';
 import './functions/feedback.js';
 import './functions/comments.js';
 import { TableClient } from '@azure/data-tables';
