@@ -135,7 +135,7 @@ jobs:
             --method PUT \
             --uri "https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/cooking-code/providers/Microsoft.Web/staticSites/stapp-cooking-code/builds/${{ github.event.pull_request.number }}/config/appsettings?api-version=2022-09-01" \
             --body "$(jq -n --arg conn "$STORAGE_CONN" \
-              '{properties: {TABLE_ENV: "preview", FUNCTIONS_WORKER_RUNTIME: "node", AZURE_STORAGE_CONNECTION_STRING: $conn}}')"
+              '{properties: {TABLE_ENV: "preview", AZURE_STORAGE_CONNECTION_STRING: $conn}}')"
 
       - name: Deploy
         id: deploy
@@ -249,7 +249,7 @@ jobs:
             --method PUT \
             --uri "https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/cooking-code/providers/Microsoft.Web/staticSites/stapp-cooking-code/builds/default/config/appsettings?api-version=2022-09-01" \
             --body "$(jq -n --arg conn "$STORAGE_CONN" \
-              '{properties: {TABLE_ENV: "production", FUNCTIONS_WORKER_RUNTIME: "node", AZURE_STORAGE_CONNECTION_STRING: $conn}}')"
+              '{properties: {TABLE_ENV: "production", AZURE_STORAGE_CONNECTION_STRING: $conn}}')"
 
       - name: Deploy
         uses: Azure/static-web-apps-deploy@v1
