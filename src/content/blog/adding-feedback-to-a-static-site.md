@@ -62,7 +62,7 @@ The solution is a single environment variable — `TABLE_ENV` — that controls 
 
 ```typescript
 // api/src/tableClient.ts
-const tablePrefix = process.env.TABLE_ENV === 'preview' ? 'preview_' : '';
+const tablePrefix = process.env.TABLE_ENV === 'preview' ? 'preview' : '';
 
 export function getTableClient(tableName: string): TableClient {
   const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING ?? '';
@@ -73,7 +73,7 @@ export function getTableClient(tableName: string): TableClient {
 | Environment | `TABLE_ENV` | Tables used |
 |---|---|---|
 | Local dev | `local` (or unset) | `ratings`, `comments` (Azurite) |
-| PR preview | `preview` | `preview_ratings`, `preview_comments` |
+| PR preview | `preview` | `previewratings`, `previewcomments` |
 | Production | unset | `ratings`, `comments` |
 
 Preview environments get their own prefixed tables in the same storage account — zero bleed to production, no extra infrastructure.

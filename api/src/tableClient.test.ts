@@ -33,7 +33,7 @@ describe('getTableClient', () => {
     expect(mockFromConnectionString).toHaveBeenCalledWith('conn-str', 'comments');
   });
 
-  it('prefixes table name with "preview_" when TABLE_ENV is preview', async () => {
+  it('prefixes table name with "preview" when TABLE_ENV is preview', async () => {
     vi.stubEnv('AZURE_STORAGE_CONNECTION_STRING', 'UseDevelopmentStorage=true');
     vi.stubEnv('TABLE_ENV', 'preview');
 
@@ -41,6 +41,6 @@ describe('getTableClient', () => {
     const { getTableClient } = await import('./tableClient.js');
     getTableClient('ratings');
 
-    expect(mockFromConnectionString).toHaveBeenCalledWith('UseDevelopmentStorage=true', 'preview_ratings');
+    expect(mockFromConnectionString).toHaveBeenCalledWith('UseDevelopmentStorage=true', 'previewratings');
   });
 });

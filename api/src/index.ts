@@ -4,7 +4,7 @@ import './functions/comments.js';
 import { TableClient } from '@azure/data-tables';
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING ?? '';
-const tablePrefix = process.env.TABLE_ENV === 'preview' ? 'preview_' : '';
+const tablePrefix = process.env.TABLE_ENV === 'preview' ? 'preview' : '';
 
 async function ensureTables() {
   for (const name of ['ratings', 'comments']) {
