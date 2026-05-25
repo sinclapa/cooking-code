@@ -27,3 +27,11 @@ coverage/
 
 # Claude Code
 .claude/
+
+# Local dev runtime
+.azurite/
+.dev-pids
+.dev-logs/
+api/dist/
+api/node_modules/
+api/local.settings.json

@@ -37,6 +37,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install API dependencies
+        run: npm ci
+        working-directory: api
+
       - name: Set build version
         id: version
         run: echo "value=$(TZ=UTC git log -1 --format="%cd" --date=format:"%Y%m%d.%H%M%S")" >> $GITHUB_OUTPUT
@@ -87,11 +91,24 @@ jobs:
       deployments: write
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
+
+      - name: Build API
+        run: npm ci && npm run build && npm prune --omit=dev
+        working-directory: api
 
       - uses: azure/login@v2
         with:
@@ -110,6 +127,16 @@ jobs:
           echo "::add-mask::$token"
           echo "token=$token" >> "$GITHUB_OUTPUT"
 
+      - name: Set preview app settings
+        env:
+          STORAGE_CONN: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+        run: |
+          az rest \
+            --method PUT \
+            --uri "https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/cooking-code/providers/Microsoft.Web/staticSites/stapp-cooking-code/builds/${{ github.event.pull_request.number }}/config/appsettings?api-version=2022-09-01" \
+            --body "$(jq -n --arg conn "$STORAGE_CONN" \
+              '{properties: {TABLE_ENV: "preview", AZURE_STORAGE_CONNECTION_STRING: $conn}}')"
+
       - name: Deploy
         id: deploy
         uses: Azure/static-web-apps-deploy@v1
@@ -117,9 +144,52 @@ jobs:
           azure_static_web_apps_api_token: ${{ steps.swa-token.outputs.token }}
           action: upload
           app_location: dist
+          api_location: api
           output_location: ""
           skip_app_build: true
-          skip_api_build: true
+          skip_api_build: false
+          api_build_command: echo "API already compiled"
+
+      - name: Update PR deploy comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.static_web_app_url }}';
+            const body = `Azure Static Web Apps: Your stage site is ready! Visit it here: ${url}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const swaComments = comments.filter(c =>
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes('Azure Static Web Apps')
+            );
+
+            if (swaComments.length > 0) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: swaComments[0].id,
+                body,
+              });
+              for (const extra of swaComments.slice(1)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: extra.id,
+                });
+              }
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
 
       - name: Update PR deploy comment
         uses: actions/github-script@v7
@@ -176,11 +246,24 @@ jobs:
       deployments: write
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
+
+      - name: Build API
+        run: npm ci && npm run build && npm prune --omit=dev
+        working-directory: api
 
       - uses: azure/login@v2
         with:
@@ -199,6 +282,16 @@ jobs:
           echo "::add-mask::$token"
           echo "token=$token" >> "$GITHUB_OUTPUT"
 
+      - name: Set production app settings
+        env:
+          STORAGE_CONN: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+        run: |
+          az rest \
+            --method PUT \
+            --uri "https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/cooking-code/providers/Microsoft.Web/staticSites/stapp-cooking-code/builds/default/config/appsettings?api-version=2022-09-01" \
+            --body "$(jq -n --arg conn "$STORAGE_CONN" \
+              '{properties: {TABLE_ENV: "production", AZURE_STORAGE_CONNECTION_STRING: $conn}}')"
+
       - name: Deploy
         uses: Azure/static-web-apps-deploy@v1
         with:
@@ -206,9 +299,11 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: upload
           app_location: dist
+          api_location: api
           output_location: ""
           skip_app_build: true
-          skip_api_build: true
+          skip_api_build: false
+          api_build_command: echo "API already compiled"
 
   close-preview:
     name: Close Preview

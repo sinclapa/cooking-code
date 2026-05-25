@@ -2,6 +2,7 @@
 import type { CollectionEntry } from 'astro:content';
 import BaseLayout from './BaseLayout.astro';
 import { formatReadingTime } from '../utils/readingTime';
+import FeedbackWidget from '../components/FeedbackWidget.astro';
 
 interface Props {
   article: CollectionEntry<'articles'>;
@@ -61,6 +62,7 @@ const formattedUpdated = updatedDate?.toLocaleDateString('en-US', {
     <div class="container">
       <div class="article-body content-width">
         <slot />
+        <FeedbackWidget contentType="article" slug={article.slug} />
         <div class="article-footer">
           {(prevArticle || nextArticle) && (
             <nav class="series-nav" aria-label="Series navigation">
