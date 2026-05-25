@@ -142,6 +142,20 @@ describe('commentsHandler - POST', () => {
     );
   });
 
+  it('sanitizes slug by replacing forbidden Table Storage characters', async () => {
+    mockCreateEntity.mockResolvedValue({});
+
+    const res = await commentsHandler(
+      makeRequest('POST', { body: { contentType: 'article', slug: 'ccdiary/bicep-deep-dive', name: 'Alice', body: 'Great!' } }),
+      makeContext()
+    );
+
+    expect(res.status).toBe(201);
+    expect(mockCreateEntity).toHaveBeenCalledWith(
+      expect.objectContaining({ partitionKey: 'article:ccdiary-bicep-deep-dive' })
+    );
+  });
+
   it('strips HTML tags from name and body', async () => {
     mockCreateEntity.mockResolvedValue({});
 

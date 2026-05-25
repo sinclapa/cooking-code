@@ -109,6 +109,21 @@ describe('feedbackHandler - POST', () => {
       expect.objectContaining({ partitionKey: 'blog:my-post', rating: 'up' })
     );
   });
+
+  it('sanitizes slug by replacing forbidden Table Storage characters', async () => {
+    mockCreateEntity.mockResolvedValue({});
+    mockListEntities.mockReturnValue(makeEntityIterator([]));
+
+    const res = await feedbackHandler(
+      makeRequest('POST', { body: { contentType: 'article', slug: 'ccdiary/bicep-deep-dive', rating: 'up' } }),
+      makeContext()
+    );
+
+    expect(res.status).toBe(201);
+    expect(mockCreateEntity).toHaveBeenCalledWith(
+      expect.objectContaining({ partitionKey: 'article:ccdiary-bicep-deep-dive' })
+    );
+  });
 });
 
 describe('feedbackHandler - unsupported method', () => {

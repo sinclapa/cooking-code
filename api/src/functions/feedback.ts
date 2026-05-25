@@ -4,12 +4,17 @@ import { getTableClient } from '../tableClient.js';
 const VALID_CONTENT_TYPES = new Set(['blog', 'article']);
 const VALID_RATINGS = new Set(['up', 'down']);
 
+// Azure Table Storage forbids / \ # ? in partition/row keys
+function toPartitionKey(contentType: string, slug: string): string {
+  return `${contentType}:${slug.replace(/[/\\#?]/g, '-')}`;
+}
+
 async function getCounts(contentType: string, slug: string): Promise<{ thumbsUp: number; thumbsDown: number }> {
   const client = getTableClient('ratings');
   let thumbsUp = 0;
   let thumbsDown = 0;
 
-  for await (const entity of client.listEntities({ queryOptions: { filter: `PartitionKey eq '${contentType}:${slug}'` } })) {
+  for await (const entity of client.listEntities({ queryOptions: { filter: `PartitionKey eq '${toPartitionKey(contentType, slug)}'` } })) {
     if (entity.rating === 'up') thumbsUp++;
     else if (entity.rating === 'down') thumbsDown++;
   }
@@ -40,7 +45,7 @@ export async function feedbackHandler(req: HttpRequest, _context: InvocationCont
     const client = getTableClient('ratings');
     const rowKey = `${new Date().toISOString()}_${crypto.randomUUID().slice(0, 8)}`;
 
-    await client.createEntity({ partitionKey: `${contentType}:${slug}`, rowKey, rating });
+    await client.createEntity({ partitionKey: toPartitionKey(contentType, slug), rowKey, rating });
 
     return { status: 201, jsonBody: await getCounts(contentType, slug) };
   }

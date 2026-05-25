@@ -3,6 +3,11 @@ import { getTableClient } from '../tableClient.js';
 
 const VALID_CONTENT_TYPES = new Set(['blog', 'article']);
 
+// Azure Table Storage forbids / \ # ? in partition/row keys
+function toPartitionKey(contentType: string, slug: string): string {
+  return `${contentType}:${slug.replace(/[/\\#?]/g, '-')}`;
+}
+
 function stripHtml(input: string): string {
   let result = '';
   let inTag = false;
@@ -26,7 +31,7 @@ export async function commentsHandler(req: HttpRequest, _context: InvocationCont
     const client = getTableClient('comments');
     const comments: Array<{ id: string; name: string; body: string; createdAt: string }> = [];
 
-    for await (const entity of client.listEntities({ queryOptions: { filter: `PartitionKey eq '${contentType}:${slug}'` } })) {
+    for await (const entity of client.listEntities({ queryOptions: { filter: `PartitionKey eq '${toPartitionKey(contentType, slug)}'` } })) {
       if (!entity.approved) continue;
       comments.push({
         id: entity.rowKey as string,
@@ -64,7 +69,7 @@ export async function commentsHandler(req: HttpRequest, _context: InvocationCont
     const createdAt = new Date().toISOString();
 
     await client.createEntity({
-      partitionKey: `${contentType}:${slug}`,
+      partitionKey: toPartitionKey(contentType, slug),
       rowKey,
       name,
       body,
