@@ -56,8 +56,7 @@ function Start-BgProcess([string]$Name, [string]$Command, [string]$WorkDir) {
 }
 
 # ── Setup ─────────────────────────────────────────────────────────────────────
-New-Item -ItemType Directory -Force $logDir                      | Out-Null
-New-Item -ItemType Directory -Force (Join-Path $root ".azurite") | Out-Null
+New-Item -ItemType Directory -Force $logDir | Out-Null
 
 # ── Pre-flight: func.exe ──────────────────────────────────────────────────────
 if (-not (Test-Path $funcExe)) {
@@ -84,7 +83,7 @@ Start-Sleep -Milliseconds 500
 
 # ── 1. Azurite ────────────────────────────────────────────────────────────────
 Write-Host "  [1/5] Azurite..." -NoNewline
-$p = Start-BgProcess "azurite" "npx azurite --location .azurite" $root
+$p = Start-BgProcess "azurite" "npx --yes azurite --location .azurite" $root
 $pids["azurite"] = $p.Id
 if (-not (Wait-Log (Join-Path $logDir "azurite.log") "successfully listening" 30)) {
   Write-Host " FAILED" -ForegroundColor Red
@@ -125,7 +124,7 @@ Write-Host " ready  [:7071]" -ForegroundColor Green
 
 # ── 5. SWA proxy ─────────────────────────────────────────────────────────────
 Write-Host "  [5/5] SWA emulator..." -NoNewline
-$swaCmd = "npx @azure/static-web-apps-cli start http://localhost:4321 --api-devserver-url http://localhost:7071"
+$swaCmd = "npx --yes @azure/static-web-apps-cli start http://localhost:4321 --api-devserver-url http://localhost:7071"
 $p = Start-BgProcess "swa" $swaCmd $root
 $pids["swa"] = $p.Id
 if (-not (Wait-Log (Join-Path $logDir "swa.log") "emulator started at" 40)) {
