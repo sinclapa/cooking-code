@@ -63,7 +63,7 @@ New-Item -ItemType Directory -Force (Join-Path $root ".azurite") | Out-Null
 if (-not (Test-Path $funcExe)) {
   Write-Host ""
   Write-Host "  func.exe not found. Run this once to download it:" -ForegroundColor Yellow
-  Write-Host "    npx swa start --api-location api" -ForegroundColor Cyan
+  Write-Host "    npx @azure/static-web-apps-cli start --api-location api" -ForegroundColor Cyan
   Write-Host "  Press Ctrl+C once it starts, then re-run this script." -ForegroundColor Yellow
   Write-Host ""
   exit 1
@@ -125,7 +125,7 @@ Write-Host " ready  [:7071]" -ForegroundColor Green
 
 # ── 5. SWA proxy ─────────────────────────────────────────────────────────────
 Write-Host "  [5/5] SWA emulator..." -NoNewline
-$swaCmd = "npx swa start http://localhost:4321 --api-devserver-url http://localhost:7071"
+$swaCmd = "npx @azure/static-web-apps-cli start http://localhost:4321 --api-devserver-url http://localhost:7071"
 $p = Start-BgProcess "swa" $swaCmd $root
 $pids["swa"] = $p.Id
 if (-not (Wait-Log (Join-Path $logDir "swa.log") "emulator started at" 40)) {
